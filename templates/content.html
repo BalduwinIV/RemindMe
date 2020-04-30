@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card text-center">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="/notes">Notes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="/tasks">Tasks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="/reminders">Reminders</a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <p class="text-center">
+            <a class="btn btn-dark btn-block" href="/create_note" role="button" style="margin-top: 10px;margin-bottom: 30px">Create note</a>
+        </p>
+        {% if notes %}
+        {% for i in range(0, notes|length, 3) %}
+            <div class="card-group">
+                {% if notes|length < i + 3 %}
+                    {% for j in range(i, notes|length) %}
+                        <div class="card" style="max-width: 286px;min-height: 200px">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ notes[j].title }}</h5>
+                                <p class="card-text">{{ notes[j].content }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {% for j in range(i, i + 3) %}
+                        <div class="card" style="max-width: 286px;min-height: 200px">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ notes[j].title }}</h5>
+                                <p class="card-text">{{ notes[j].content }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% else %}
+        <div class="alert alert-light font-weight-light text-center" role="alert">You haven't any notes.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

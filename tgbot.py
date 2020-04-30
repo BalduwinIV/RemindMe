@@ -2,7 +2,7 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler, MessageHandler
 
 
-TOKEN = "1276432272:AAE40A23yikb_O1M5Yr1fyLfTk-rPyqxiW8"
+TOKEN = ""
 
 
 def bot_start(update, context):

@@ -17,7 +17,7 @@
     </div>
     <div class="card-body">
         <p class="text-center">
-            <a class="btn btn-dark btn-block" href="/create_note" role="button" style="margin-top: 10px;margin-bottom: 30px">Create note</a>
+            <a class="btn btn-dark btn-block" href="/create_note" role="button" style="margin-top: 0px;margin-bottom: 20px">Create note</a>
         </p>
         {% if notes %}
         {% for i in range(0, notes|length, 3) %}
@@ -28,6 +28,8 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ notes[j].title }}</h5>
                                 <p class="card-text">{{ notes[j].content }}</p>
+                                <a class="edit" href="/edit_note/{{ notes[j].id }}" title="Edit"></a>
+                                <a class="close" href="/delete_note/{{ notes[j].id }}" title="Close"></a>
                             </div>
                         </div>
                     {% endfor %}
@@ -37,6 +39,8 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ notes[j].title }}</h5>
                                 <p class="card-text">{{ notes[j].content }}</p>
+                                <a class="edit" href="/edit_note/{{ notes[j].id }}" title="Edit"></a>
+                                <a class="close" href="/delete_note/{{ notes[j].id }}" title="Close"></a>
                             </div>
                         </div>
                     {% endfor %}

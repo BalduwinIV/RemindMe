@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, redirect, request
+from flask import Flask, render_template, url_for, redirect, request, abort
 from flask_wtf import FlaskForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from wtforms import StringField, SubmitField, BooleanField, PasswordField, TextAreaField
@@ -40,14 +40,6 @@ def index():
     return render_template('index.html', user_login=False)
 
 
-@app.route('/notes')
-def notes():
-    username = current_user.username
-    session = db_session.create_session()
-    notes = session.query(Notes).filter(Notes.user_id == current_user.id).all()
-    return render_template('content.html', user_login=True, username=username, notes=notes)
-
-
 @app.route('/register', methods=["GET", "POST"])
 def register():
     form = RegistrationForm()
@@ -56,7 +48,7 @@ def register():
 
         if session.query(User).filter(User.username == form.username.data).first():
             return render_template('register.html', form=form, user_login=False,
-                                   message="This username has already used")
+                                   message="This username has been already used.")
         new_user = User()
         new_user.username = form.username.data
         new_user.set_password(form.password.data)
@@ -81,6 +73,14 @@ def login():
     return render_template('login.html', form=form, user_login=False)
 
 
+@app.route('/notes')
+def notes():
+    username = current_user.username
+    session = db_session.create_session()
+    notes = session.query(Notes).filter(Notes.user_id == current_user.id).all()
+    return render_template('content.html', user_login=True, username=username, notes=notes)
+
+
 @app.route('/create_note', methods=["GET", "POST"])
 def create_note():
     form = NotesCreateForm()
@@ -95,6 +95,43 @@ def create_note():
         return redirect("/")
     return render_template("create_note.html", form=form, user_login=True,
                            username=current_user.username)
+
+
+@app.route('/edit_note/<int:note_id>', methods=["GET", "POST"])
+def change_note(note_id):
+    form = NotesCreateForm()
+    if request.method == "GET":
+        session = db_session.create_session()
+        note = session.query(Notes).get(note_id)
+        if note:
+            form.title.data = note.title
+            form.content.data = note.content
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        note = session.query(Notes).get(note_id)
+        if note:
+            note.title = form.title.data
+            note.content = form.content.data
+            session.commit()
+            return redirect('/notes')
+        else:
+            abort(404)
+    return render_template('create_note.html', form=form, user_login=True,
+                           username=current_user.username)
+
+
+@app.route('/delete_note/<int:note_id>')
+def delete_note(note_id):
+    session = db_session.create_session()
+    note = session.query(Notes).get(note_id)
+    if not note:
+        return redirect('/notes')
+
+    session.delete(note)
+    session.commit()
+    return redirect('/notes')
 
 
 @app.route('/features')

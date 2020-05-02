@@ -14,6 +14,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.String)
 
     notes = orm.relation('Notes', back_populates='user')
+    tasks = orm.relation('Tasks', back_populates='user')
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
@@ -22,12 +23,22 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
         return check_password_hash(self.hashed_password, password)
 
 
-class Notes(SqlAlchemyBase):
+class Notes(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'notes'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
     title = sqlalchemy.Column(sqlalchemy.String)
     content = sqlalchemy.Column(sqlalchemy.String)
+
+    user = orm.relation('User')
+
+
+class Tasks(SqlAlchemyBase, SerializerMixin):
+    __tablename__ = 'tasks'
+
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
+    task = sqlalchemy.Column(sqlalchemy.String)
 
     user = orm.relation('User')

@@ -7,7 +7,7 @@
             {{ form.hidden_tag() }}
             {{ form.csrf_token }}
             <h5 class="card-title">{{ form.title.label }}:</h5>
-            <p>{{ form.title(class="form-control", type="text") }}</p>
+            <p>{{ form.title(class="form-control", type="text", autocomplete="off") }}</p>
             <p class="card-text">{{ form.content.label }}:</p>
             <p>{{ form.content(class="form-control") }}</p>
             {{ form.submit(type="submit", class="btn btn-dark") }}

@@ -3,7 +3,8 @@ from flask_wtf import FlaskForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from wtforms import StringField, SubmitField, BooleanField, PasswordField, TextAreaField
 from wtforms.validators import DataRequired
-from notes_api import blueprint
+import notes_api
+import users_api
 from data import db_session
 from data.users import *
 
@@ -161,5 +162,6 @@ def load_user(user_id):
 
 if __name__ == '__main__':
     db_session.global_init("db/data.sqlite")
-    app.register_blueprint(blueprint)
+    app.register_blueprint(notes_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     app.run()

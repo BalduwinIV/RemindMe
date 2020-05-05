@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, make_response
+from flask import Blueprint, jsonify, request
 from data import db_session
 from data.users import *
 
@@ -43,14 +43,16 @@ def get_note(note_id):
 
 @blueprint.route('/api/notes/<int:note_id>', methods=["PUT"])
 def edit_note(note_id):
+    if not request.json:
+        return jsonify({'error': 'Empty request'})
     session = db_session.create_session()
-    note = session.query(Notes).get(note_id)
-    if not note:
+    note = session.query(Notes).filter(Notes.id == note_id)
+    if not note.first():
         return jsonify({'error': 'Not found'})
     try:
         note.update(request.json)
     except Exception:
-        return jsonify({'error': 'Wrong arguments'})
+        return jsonify({'error': f'Wrong arguments'})
     session.commit()
     return jsonify({'success': 'OK'})
 

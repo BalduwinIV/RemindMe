@@ -1,8 +1,9 @@
-from flask import Flask, render_template, url_for, redirect, request, abort
+from flask import Flask, render_template, jsonify, redirect, request, abort, make_response
 from flask_wtf import FlaskForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from wtforms import StringField, SubmitField, BooleanField, PasswordField, TextAreaField
 from wtforms.validators import DataRequired
+from notes_api import blueprint
 from data import db_session
 from data.users import *
 
@@ -31,6 +32,11 @@ class NotesCreateForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
     submit = SubmitField("Add")
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @app.route('/')
@@ -155,4 +161,5 @@ def load_user(user_id):
 
 if __name__ == '__main__':
     db_session.global_init("db/data.sqlite")
+    app.register_blueprint(blueprint)
     app.run()

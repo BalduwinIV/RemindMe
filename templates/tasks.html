@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+                <a class="nav-link" href="/notes">Notes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="/tasks">Tasks</a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <p class="text-center">
+            <a class="btn btn-dark btn-block" href="/create_task" role="button" style="margin-top: 0px;margin-bottom: 20px">Create new task</a>
+        </p>
+        {% if tasks %}
+            {% for i in range(tasks|length) %}
+                {% if not tasks[i].state %}
+                <div class="d-flex">
+                    <div class="p-2 flex-grow-1">
+                        <a href="/complete_task/{{ tasks[i].id }}" class="btn btn-light btn-block" role="button" style="text-align: left">{{ tasks[i].task }}</a>
+                    </div>
+                    <div class="p-2">
+                        <a class="btn btn-dark" href="/edit_task/{{ tasks[i].id }}">Edit</a>
+                    </div>
+                    <div class="p-2">
+                        <a class="btn btn-danger" href="/delete_task/{{ tasks[i].id }}">Delete</a>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            {% for i in range(tasks|length) %}
+                {% if tasks[i].state %}
+                    <div class="d-flex">
+                        <div class="p-2 flex-grow-1">
+                            <a href="/ruin_task/{{ tasks[i].id }}" class="btn btn-success btn-block" role="button" style="text-align: left">{{ tasks[i].task }}</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-light font-weight-light text-center" role="alert">You haven't got any tasks.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

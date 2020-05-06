@@ -5,6 +5,7 @@ from wtforms import StringField, SubmitField, BooleanField, PasswordField, TextA
 from wtforms.validators import DataRequired
 import notes_api
 import users_api
+import tgbot
 from data import db_session
 from data.users import *
 
@@ -26,12 +27,17 @@ class LoginForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     remember_me = BooleanField("Remember me?")
-    submit = SubmitField("Enter")
+    submit = SubmitField("Sign in")
 
 
 class NotesCreateForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
+    submit = SubmitField("Add")
+
+
+class TaskCreateForm(FlaskForm):
+    task = StringField("Task", validators=[DataRequired()])
     submit = SubmitField("Add")
 
 
@@ -139,6 +145,85 @@ def delete_note(note_id):
     session.delete(note)
     session.commit()
     return redirect('/notes')
+
+
+@app.route('/tasks')
+def tasks():
+    username = current_user.username
+    session = db_session.create_session()
+    tasks = session.query(Tasks).all()
+    return render_template('tasks.html', user_login=True, username=username, tasks=tasks)
+
+
+@app.route('/complete_task/<int:task_id>')
+def complete_task(task_id):
+    session = db_session.create_session()
+    task = session.query(Tasks).get(task_id)
+    if not task:
+        abort(404)
+    task.state = True
+    session.commit()
+    return redirect('/tasks')
+
+
+@app.route('/ruin_task/<int:task_id>')
+def ruin_task(task_id):
+    session = db_session.create_session()
+    task = session.query(Tasks).get(task_id)
+    if not task:
+        abort(404)
+    task.state = False
+    session.commit()
+    return redirect('/tasks')
+
+
+@app.route('/create_task', methods=["GET", "POST"])
+def create_task():
+    form = TaskCreateForm()
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        new_task = Tasks()
+        new_task.user_id = current_user.id
+        new_task.task = form.task.data
+        session.add(new_task)
+        session.commit()
+        return redirect("/tasks")
+    return render_template("create_task.html", form=form, user_login=True,
+                           username=current_user.username)
+
+
+@app.route('/edit_task/<int:task_id>', methods=["GET", "POST"])
+def edit_task(task_id):
+    form = TaskCreateForm()
+    if request.method == "GET":
+        session = db_session.create_session()
+        task = session.query(Tasks).get(task_id)
+        if task:
+            form.task.data = task.task
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        task = session.query(Tasks).get(task_id)
+        if task:
+            task.task = form.task.data
+            session.commit()
+            return redirect('/tasks')
+        else:
+            abort(404)
+    return render_template('create_task.html', form=form, user_login=True,
+                           username=current_user.username)
+
+
+@app.route('/delete_task/<int:task_id>')
+def delete_task(task_id):
+    session = db_session.create_session()
+    task = session.query(Tasks).get(task_id)
+    if not task:
+        abort(404)
+    session.delete(task)
+    session.commit()
+    return redirect('/tasks')
 
 
 @app.route('/features')

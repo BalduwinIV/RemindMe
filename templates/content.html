@@ -8,16 +8,13 @@
                 <a class="nav-link active" href="/notes">Notes</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link disabled" href="/tasks">Tasks</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" href="/reminders">Reminders</a>
+                <a class="nav-link" href="/tasks">Tasks</a>
             </li>
         </ul>
     </div>
     <div class="card-body">
         <p class="text-center">
-            <a class="btn btn-dark btn-block" href="/create_note" role="button" style="margin-top: 0px;margin-bottom: 20px">Create note</a>
+            <a class="btn btn-dark btn-block" href="/create_note" role="button" style="margin-top: 0px;margin-bottom: 20px">Create new note</a>
         </p>
         {% if notes %}
         {% for i in range(0, notes|length, 3) %}
@@ -48,7 +45,7 @@
             </div>
         {% endfor %}
         {% else %}
-        <div class="alert alert-light font-weight-light text-center" role="alert">You haven't any notes.</div>
+            <div class="alert alert-light font-weight-light text-center" role="alert">You haven't got any notes.</div>
         {% endif %}
     </div>
 </div>

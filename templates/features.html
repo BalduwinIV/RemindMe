@@ -1,5 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>HI</h1>
+<div class="card mb-3 center" style="width: 650px;margin-top: 20px;margin-bottom: 10px">
+  <img src="{{ release_pic }}" class="card-img-top" alt="Release pic">
+  <div class="card-body">
+    <h5 class="card-title">Release</h5>
+    <p class="card-text">RemindMe v1.0 just released! Base functions are available now and you can try it by yourself.</p>
+    <p class="card-text"><small class="text-muted">06.05.2020 19:08</small></p>
+  </div>
+</div>
+<div class="card mb-3 center" style="width: 650px;margin-top: 20px;margin-bottom: 10px">
+  <img src="{{ feature_pic }}" class="card-img-top" alt="Features pic">
+  <div class="card-body">
+    <h5 class="card-title">New features</h5>
+    <p class="card-text">RemindMe v1.1 just come out. Now this is finished web application.</p>
+    <p class="card-text"><small class="text-muted">07.05.2020 20:09</small></p>
+  </div>
+</div>
 {% endblock %}

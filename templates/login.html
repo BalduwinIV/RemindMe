@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 class="display-2">Login</h2>
-<form action="" method="post" novalidate>
+<form class="text-center account-form" action="" method="post" novalidate>
     {{ form.hidden_tag() }}
     {{ csrf_token }}
+    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
     <p>
-        {{ form.username.label }}
-        {{ form.username(class="form-control", type="text", autocomplete="off") }}
+        {{ form.username(class="form-control", type="text", autocomplete="off", placeholder="Username") }}
         {% for error in form.username.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
@@ -15,15 +14,17 @@
         {% endfor %}
     </p>
     <p>
-        {{ form.password.label }}
-        {{ form.password(class="form-control", type="password") }}
+        {{ form.password(class="form-control", type="password", placeholder="Password") }}
         {% for error in form.password.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>
         {% endfor %}
     </p>
-    <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+    <div>{{ message }}</div>
+    <div class="checkbox mb-3">
+        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+    </div>
     <p>{{ form.submit(type="submit", class="btn btn-dark") }}</p>
 </form>
 {% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form class="text-center account-form" action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <h1 class="h3 mb-3 font-weight-normal">Profile</h1>
+    <p>
+        {{ form.username(class="form-control", type="text", autocomplete="off", placeholder="Username") }}<br>
+        {% for error in form.username.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.old_password(class="form-control", type="password", placeholder="Old password") }}<br>
+        {% for error in form.old_password.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.new_password(class="form-control", type="password", placeholder="New password") }}<br>
+        {% for error in form.new_password.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <div>
+        {{ message }}
+    </div>
+    <p>
+        {{ form.submit(type="submit", class="btn btn-dark") }}
+        <a href="/delete_user/{{ user_id }}" class="btn btn-danger" role="button">Delete user</a>
+    </p>
+</form>
+{% endblock %}

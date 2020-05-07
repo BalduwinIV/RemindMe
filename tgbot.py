@@ -5,7 +5,7 @@ from data import db_session
 from data.users import *
 
 
-TOKEN = ""
+TOKEN = "1276432272:AAE40A23yikb_O1M5Yr1fyLfTk-rPyqxiW8"
 
 notes_keyboard = [['Show', 'Edit', 'Delete']]
 notes_id_keyboard = [[], ['stop']]

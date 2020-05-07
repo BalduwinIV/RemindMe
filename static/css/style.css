@@ -8,6 +8,21 @@ body {
     margin-right: auto;
 }
 
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.account-form {
+    margin-top: 40px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 350px;
+    background-color: #FFFFFF;
+    border-radius: 20px;
+    padding: 30px
+}
+
 .close {
   position: absolute;
   right: 21px;

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, redirect, request, abort, make_response
+from flask import Flask, render_template, jsonify, redirect, request, abort, make_response, url_for
 from flask_wtf import FlaskForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from wtforms import StringField, SubmitField, BooleanField, PasswordField, TextAreaField
@@ -28,6 +28,13 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     remember_me = BooleanField("Remember me?")
     submit = SubmitField("Sign in")
+
+
+class UserDataForm(FlaskForm):
+    username = StringField("Username")
+    old_password = PasswordField("Old password")
+    new_password = PasswordField("New password")
+    submit = SubmitField("Confirm")
 
 
 class NotesCreateForm(FlaskForm):
@@ -86,151 +93,232 @@ def login():
     return render_template('login.html', form=form, user_login=False)
 
 
+@app.route('/profile', methods=["GET", "POST"])
+def profile():
+    form = UserDataForm()
+    if request.method == "GET":
+        session = db_session.create_session()
+        user = session.query(User).get(current_user.id)
+        form.username.data = user.username
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        user = session.query(User).get(current_user.id)
+        try:
+            user.username = form.username.data
+            session.commit()
+        except Exception:
+            return render_template('profile.html', form=form, user_login=True,
+                                   username=current_user.username,
+                                   message="This username has been already taken.",
+                                   user_id=current_user.id)
+        if form.old_password.data or form.new_password.data:
+            if not form.old_password.data:
+                return render_template('profile.html', form=form, user_login=True,
+                                       username=current_user.username,
+                                       message="Write an old password.",
+                                       user_id=current_user.id)
+            if user.check_password(form.old_password.data):
+                if not form.new_password.data:
+                    return render_template('profile.html', form=form, user_login=True,
+                                           username=current_user.username,
+                                           message="Write a new password.",
+                                           user_id=current_user.id)
+                user.set_password(form.new_password.data)
+                session.commit()
+                return redirect('/notes')
+            return render_template('profile.html', form=form, user_login=True,
+                                   username=current_user.username,
+                                   message="Old password is wrong.",
+                                   user_id=current_user.id)
+        return redirect('/notes')
+    return render_template('profile.html', form=form, user_login=True,
+                           username=current_user.username, user_id=current_user.id)
+
+
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    session = db_session.create_session()
+    user = session.query(User).get(user_id)
+    if not user:
+        abort(404)
+    notes = session.query(Notes).filter(Notes.id == current_user.id).all()
+    tasks = session.query(Tasks).filter(Tasks.id == current_user.id).all()
+    session.delete(notes)
+    session.delete(tasks)
+    session.delete(user)
+    session.commit()
+    return redirect('/')
+
+
 @app.route('/notes')
 def notes():
-    username = current_user.username
-    session = db_session.create_session()
-    notes = session.query(Notes).filter(Notes.user_id == current_user.id).all()
-    return render_template('content.html', user_login=True, username=username, notes=notes)
+    if current_user.is_authenticated:
+        username = current_user.username
+        session = db_session.create_session()
+        notes = session.query(Notes).filter(Notes.user_id == current_user.id).all()
+        return render_template('content.html', user_login=True, username=username, notes=notes)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/create_note', methods=["GET", "POST"])
 def create_note():
-    form = NotesCreateForm()
-    if form.validate_on_submit():
-        session = db_session.create_session()
-        new_note = Notes()
-        new_note.user_id = current_user.id
-        new_note.title = form.title.data
-        new_note.content = form.content.data
-        session.add(new_note)
-        session.commit()
-        return redirect("/")
-    return render_template("create_note.html", form=form, user_login=True,
-                           username=current_user.username)
+    if current_user.is_authenticated:
+        form = NotesCreateForm()
+        if form.validate_on_submit():
+            session = db_session.create_session()
+            new_note = Notes()
+            new_note.user_id = current_user.id
+            new_note.title = form.title.data
+            new_note.content = form.content.data
+            session.add(new_note)
+            session.commit()
+            return redirect("/")
+        return render_template("create_note.html", form=form, user_login=True,
+                               username=current_user.username)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/edit_note/<int:note_id>', methods=["GET", "POST"])
 def change_note(note_id):
-    form = NotesCreateForm()
-    if request.method == "GET":
-        session = db_session.create_session()
-        note = session.query(Notes).get(note_id)
-        if note:
-            form.title.data = note.title
-            form.content.data = note.content
-        else:
-            abort(404)
-    if form.validate_on_submit():
-        session = db_session.create_session()
-        note = session.query(Notes).get(note_id)
-        if note:
-            note.title = form.title.data
-            note.content = form.content.data
-            session.commit()
-            return redirect('/notes')
-        else:
-            abort(404)
-    return render_template('create_note.html', form=form, user_login=True,
-                           username=current_user.username)
+    if current_user.is_authenticated:
+        form = NotesCreateForm()
+        if request.method == "GET":
+            session = db_session.create_session()
+            note = session.query(Notes).get(note_id)
+            if note:
+                form.title.data = note.title
+                form.content.data = note.content
+            else:
+                abort(404)
+        if form.validate_on_submit():
+            session = db_session.create_session()
+            note = session.query(Notes).get(note_id)
+            if note:
+                note.title = form.title.data
+                note.content = form.content.data
+                session.commit()
+                return redirect('/notes')
+            else:
+                abort(404)
+        return render_template('create_note.html', form=form, user_login=True,
+                               username=current_user.username)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/delete_note/<int:note_id>')
 def delete_note(note_id):
-    session = db_session.create_session()
-    note = session.query(Notes).get(note_id)
-    if not note:
-        return redirect('/notes')
+    if current_user.is_authenticated:
+        session = db_session.create_session()
+        note = session.query(Notes).get(note_id)
+        if not note:
+            return redirect('/notes')
 
-    session.delete(note)
-    session.commit()
-    return redirect('/notes')
+        session.delete(note)
+        session.commit()
+        return redirect('/notes')
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/tasks')
 def tasks():
-    username = current_user.username
-    session = db_session.create_session()
-    tasks = session.query(Tasks).all()
-    return render_template('tasks.html', user_login=True, username=username, tasks=tasks)
+    if current_user.is_authenticated:
+        username = current_user.username
+        session = db_session.create_session()
+        tasks = session.query(Tasks).filter(Tasks.user_id == current_user.id).all()
+        return render_template('tasks.html', user_login=True, username=username, tasks=tasks)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/complete_task/<int:task_id>')
 def complete_task(task_id):
-    session = db_session.create_session()
-    task = session.query(Tasks).get(task_id)
-    if not task:
-        abort(404)
-    task.state = True
-    session.commit()
-    return redirect('/tasks')
+    if current_user.is_authenticated:
+        session = db_session.create_session()
+        task = session.query(Tasks).get(task_id)
+        if not task:
+            abort(404)
+        task.state = True
+        session.commit()
+        return redirect('/tasks')
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/ruin_task/<int:task_id>')
 def ruin_task(task_id):
-    session = db_session.create_session()
-    task = session.query(Tasks).get(task_id)
-    if not task:
-        abort(404)
-    task.state = False
-    session.commit()
-    return redirect('/tasks')
+    if current_user.is_authenticated:
+        session = db_session.create_session()
+        task = session.query(Tasks).get(task_id)
+        if not task:
+            abort(404)
+        task.state = False
+        session.commit()
+        return redirect('/tasks')
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/create_task', methods=["GET", "POST"])
 def create_task():
-    form = TaskCreateForm()
-    if form.validate_on_submit():
-        session = db_session.create_session()
-        new_task = Tasks()
-        new_task.user_id = current_user.id
-        new_task.task = form.task.data
-        session.add(new_task)
-        session.commit()
-        return redirect("/tasks")
-    return render_template("create_task.html", form=form, user_login=True,
-                           username=current_user.username)
+    if current_user.is_authenticated:
+        form = TaskCreateForm()
+        if form.validate_on_submit():
+            session = db_session.create_session()
+            new_task = Tasks()
+            new_task.user_id = current_user.id
+            new_task.task = form.task.data
+            session.add(new_task)
+            session.commit()
+            return redirect("/tasks")
+        return render_template("create_task.html", form=form, user_login=True,
+                               username=current_user.username)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/edit_task/<int:task_id>', methods=["GET", "POST"])
 def edit_task(task_id):
-    form = TaskCreateForm()
-    if request.method == "GET":
-        session = db_session.create_session()
-        task = session.query(Tasks).get(task_id)
-        if task:
-            form.task.data = task.task
-        else:
-            abort(404)
-    if form.validate_on_submit():
-        session = db_session.create_session()
-        task = session.query(Tasks).get(task_id)
-        if task:
-            task.task = form.task.data
-            session.commit()
-            return redirect('/tasks')
-        else:
-            abort(404)
-    return render_template('create_task.html', form=form, user_login=True,
-                           username=current_user.username)
+    if current_user.is_authenticated:
+        form = TaskCreateForm()
+        if request.method == "GET":
+            session = db_session.create_session()
+            task = session.query(Tasks).get(task_id)
+            if task:
+                form.task.data = task.task
+            else:
+                abort(404)
+        if form.validate_on_submit():
+            session = db_session.create_session()
+            task = session.query(Tasks).get(task_id)
+            if task:
+                task.task = form.task.data
+                session.commit()
+                return redirect('/tasks')
+            else:
+                abort(404)
+        return render_template('create_task.html', form=form, user_login=True,
+                               username=current_user.username)
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/delete_task/<int:task_id>')
 def delete_task(task_id):
-    session = db_session.create_session()
-    task = session.query(Tasks).get(task_id)
-    if not task:
-        abort(404)
-    session.delete(task)
-    session.commit()
-    return redirect('/tasks')
+    if current_user.is_authenticated:
+        session = db_session.create_session()
+        task = session.query(Tasks).get(task_id)
+        if not task:
+            abort(404)
+        session.delete(task)
+        session.commit()
+        return redirect('/tasks')
+    return render_template('permission.html', user_login=False)
 
 
 @app.route('/features')
 def features():
     if current_user.is_authenticated:
-        return render_template('features.html', user_login=True, username=current_user.username)
-    return render_template('features.html', user_login=False)
+        return render_template('features.html', user_login=True, username=current_user.username,
+                               release_pic=url_for('static', filename='img/release_img.png'),
+                               feature_pic=url_for('static', filename='img/feature_img.jpg'))
+    return render_template('features.html', user_login=False,
+                           release_pic=url_for('static', filename='img/release_img.png'),
+                           feature_pic=url_for('static', filename='img/feature_img.jpg'))
 
 
 @app.route('/logout')

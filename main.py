@@ -141,10 +141,6 @@ def delete_user(user_id):
     user = session.query(User).get(user_id)
     if not user:
         abort(404)
-    notes = session.query(Notes).filter(Notes.id == current_user.id).all()
-    tasks = session.query(Tasks).filter(Tasks.id == current_user.id).all()
-    session.delete(notes)
-    session.delete(tasks)
     session.delete(user)
     session.commit()
     return redirect('/')

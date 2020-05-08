@@ -53,7 +53,7 @@ def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
-@app.route('/')
+@app.route('/', methods=["GET"])
 def index():
     if current_user.is_authenticated:
         return redirect('/notes')
